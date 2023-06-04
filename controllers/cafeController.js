@@ -2,6 +2,7 @@ import formidable from "formidable";
 import fs from "fs";
 import { v4 as uuidv4 } from "uuid";
 import { Cafe } from "../models/cafeModel.js";
+import { Employee } from "../models/employeeModel.js";
 
 // create cafe
 export const createCafe = async (req, res) => {
@@ -152,7 +153,13 @@ export const getCafe = async (req, res) => {
 // delete cafe
 export const deleteCafe = async (req, res) => {
   try {
-    await Cafe.deleteOne({ id: req.params.id }).exec();
+    const employees = await Employee.find({ cafe_id: req.params.id }).exec();
+    for (const emp of employees) {
+      emp.cafe_id = null;
+      await emp.save();
+    }
+
+    await Cafe.deleteOne({ _id: req.params.id }).exec();
     res.status(200).json({ code: 1000, message: "Cafe deleted" });
   } catch (err) {
     res.status(400).json(err);
