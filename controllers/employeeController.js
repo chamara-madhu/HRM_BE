@@ -14,7 +14,7 @@ export const createEmployee = async (req, res) => {
       email_address,
       phone_number,
       gender,
-      cafe_id: cafe_id,
+      cafe_id,
       start_date,
     });
 
@@ -22,7 +22,6 @@ export const createEmployee = async (req, res) => {
     const result = await employee.save();
     res.status(200).json(result);
   } catch (err) {
-    console.log(err);
     res
       .status(400)
       .json({ code: 1000, message: "Employee is not added successfully" });
@@ -54,15 +53,54 @@ export const updateEmployee = async (req, res) => {
 export const getAllEmployees = async (req, res, next) => {
   try {
     const { cafe } = req?.query;
-    const employees = await Employee.find()
-      .select("-__v -_id -updatedAt -createdAt")
-      .populate("cafe_id", "name");
+    const employees = await Employee.aggregate([
+      {
+        $addFields: {
+          workedDays: {
+            $floor: {
+              $divide: [
+                {
+                  $subtract: [
+                    new Date(),
+                    { $toDate: "$start_date" }, // Convert start_date to Date type
+                  ],
+                },
+                1000 * 60 * 60 * 24, // milliseconds in a day
+              ],
+            },
+          },
+        },
+      },
+      {
+        $lookup: {
+          from: "caves",
+          localField: "cafe_id",
+          foreignField: "_id",
+          as: "cafe_id",
+        },
+      },
+      {
+        $project: {
+          __v: 0,
+          _id: 0,
+          updatedAt: 0,
+          createdAt: 0,
+          "cafe_id.description": 0,
+          "cafe_id.id": 0,
+          "cafe_id.location": 0,
+          "cafe_id.logo": 0,
+          "cafe_id.updatedAt": 0,
+          "cafe_id.createdAt": 0,
+          "cafe_id.__v": 0,
+        },
+      },
+    ]).sort({ workedDays: "desc" });
 
     let filteredEmployees = employees;
 
     if (typeof cafe !== "undefined") {
       filteredEmployees = employees.filter(
-        (el) => el?.cafe_id?.name?.toLowerCase() === cafe.toLowerCase()
+        (el) => el?.cafe_id?.[0]?.name?.toLowerCase() === cafe.toLowerCase()
       );
     }
 
@@ -71,7 +109,6 @@ export const getAllEmployees = async (req, res, next) => {
       total: filteredEmployees.length,
     });
   } catch (err) {
-    console.error(err);
     res.status(500).json({ message: "Internal server error" });
   }
 };

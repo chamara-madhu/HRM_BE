@@ -77,8 +77,6 @@ export const updateCafe = async (req, res) => {
       };
     }
 
-    console.log({ logo });
-
     cafe.name = fields.name;
     cafe.description = fields.description;
     cafe.logo = logo?.data ? logo : cafe.logo;
@@ -145,6 +143,16 @@ export const getCafe = async (req, res) => {
       "-__v -updatedAt -createdAt"
     );
     res.status(200).json(resp);
+  } catch (err) {
+    res.status(400).json(err);
+  }
+};
+
+// get unique locations
+export const getUniqueLocations = async (req, res) => {
+  try {
+    const uniqueLocationArr = await Cafe.distinct("location");
+    res.status(200).json(uniqueLocationArr);
   } catch (err) {
     res.status(400).json(err);
   }

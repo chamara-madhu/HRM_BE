@@ -16,9 +16,8 @@ const employeeSchema = mongoose.Schema(
     cafe_id: {
       type: mongoose.Schema.Types.ObjectId || null,
       ref: "Cafe",
-      default: null,
     },
-    start_date: { type: String },
+    start_date: { type: Date },
   },
   {
     timestamps: true,

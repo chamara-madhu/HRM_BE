@@ -6,6 +6,7 @@ import {
   getCafe,
   deleteCafe,
   getLogo,
+  getUniqueLocations,
 } from "../../controllers/cafeController.js";
 
 const router = express.Router();
@@ -21,6 +22,9 @@ router.get("/cafes", getAllCafes);
 
 // get cafe
 router.get("/cafe/:id", getCafe);
+
+// get all unique locations
+router.get("/cafes/locations", getUniqueLocations);
 
 // delete cafe
 router.delete("/cafe/:id", deleteCafe);
